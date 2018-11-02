@@ -51,12 +51,18 @@ draw_triangle(float x0, float y0, float x1, float y1, float x2, float y2,
   float f_b = f(x2, y2, x0, y0, x1, y1);
   float f_c = f(x0, y0, x1, y1, x2, y2);
 
+  int int_flag = 0;
+
   for (int y=yMin; y!=yMax; y++) {
     for (int x=xMin; x!=xMax; x++) {
 
       alpha = f(x1, y1, x2, y2, x, y) / f_a;
       beta = f(x2, y2, x0, y0, x, y) / f_b;
       gamma = f(x0, y0, x1, y1, x, y) / f_c;
+      if (int_flag == 0) {
+        printf("%f%s%f%s%f\n", alpha, " ", beta, " ", gamma);
+        int_flag = 1;
+      }
 
       if (alpha >= 0 && beta >= 0 && gamma >= 0) {
         if ((alpha > 0 || f_a*f(x1, y1, x2, y2, -1, -1) > 0) &&
@@ -117,7 +123,10 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
   float beta_xInc = (y2 - y0) / f_b;
   float gamma_xInc = (y0 - y1) / f_c;
 
+  int int_flag = 0;
+
   for (int y=yMin; y!=yMax; y++) {
+
     alpha += alpha_yInc;
     beta += beta_yInc;
     gamma += gamma_yInc;
@@ -126,7 +135,10 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
       alpha += alpha_xInc;
       beta += beta_xInc;
       gamma += gamma_xInc;
-
+      if (int_flag == 0) {
+        printf("%f%s%f%s%f\n", alpha, " ", beta, " ", gamma);
+        int_flag = 1;
+      }
 
       if (alpha >= 0) {
         if (beta >= 0) {
