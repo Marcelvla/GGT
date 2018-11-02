@@ -19,7 +19,6 @@
 
 #include "types.h"
 
-
 float f(int x0, int y0, int x1, int y1, int x, int y) {
    return (y0 - y1) * x + (x1 - x0) * y + x0 * y1 - x1 * y0;
  }
@@ -35,8 +34,13 @@ void
 draw_triangle(float x0, float y0, float x1, float y1, float x2, float y2,
     byte r, byte g, byte b)
 {
-  int xMin = x0, xMax = x2, yMin = y0, yMax = y2;
   float alpha, beta, gamma;
+  float f_a = f(x1, y1, x2, y2, x0, y0);
+  float f_b = f(x2, y2, x0, y0, x1, y1);
+  float f_c = f(x0, y0, x1, y1, x2, y2);
+
+  // determine xMin, xMax, yMin, yMax
+  int xMin = x0, xMax = x2, yMin = y0, yMax = y2;
 
   if (x1 < xMin) xMin = x1;
   if (x2 < xMin) xMin = x2;
@@ -47,22 +51,13 @@ draw_triangle(float x0, float y0, float x1, float y1, float x2, float y2,
   if (y1 > yMax) yMax = y1;
   if (y0 > yMax) yMax = y0;
 
-  float f_a = f(x1, y1, x2, y2, x0, y0);
-  float f_b = f(x2, y2, x0, y0, x1, y1);
-  float f_c = f(x0, y0, x1, y1, x2, y2);
-
-  int int_flag = 0;
-
+  // algorithm almost literally copied from the book chapter
   for (int y=yMin; y<=yMax; y++) {
     for (int x=xMin; x<=xMax; x++) {
 
       alpha = f(x1, y1, x2, y2, x, y) / f_a;
       beta = f(x2, y2, x0, y0, x, y) / f_b;
       gamma = f(x0, y0, x1, y1, x, y) / f_c;
-      if (int_flag == 0) {
-        printf("%f%s%f%s%f\n", alpha, " ", beta, " ", gamma);
-        int_flag = 1;
-      }
 
       if (alpha >= 0 && beta >= 0 && gamma >= 0) {
         if ((alpha > 0 || f_a*f(x1, y1, x2, y2, -1, -1) > 0) &&
@@ -76,13 +71,26 @@ draw_triangle(float x0, float y0, float x1, float y1, float x2, float y2,
 }
 
 
+// NOTE: optimized version is working but there's a bug in it: some extra pixels
+// get displayed while they shouldn't. We left it in because the biggest part of
+// the optimalisation is done within the part that causes the bug (we think).
 
 void
 draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float y2,
     byte r, byte g, byte b)
 {
+  float t_alpha, t_beta, t_gamma;
+
+  float f_a = f(x1, y1, x2, y2, x0, y0);
+  float f_b = f(x2, y2, x0, y0, x1, y1);
+  float f_c = f(x0, y0, x1, y1, x2, y2);
+
+  float alpha_check = f(x1, y1, x2, y2, -1, -1);
+  float beta_check = f(x2, y2, x0, y0, -1, -1);
+  float gamma_check = f(x0, y0, x1, y1, -1, -1);
+
+  // determine xMin, xMax, yMin, yMax
   int xMin = x0, xMax = x2, yMin = y0, yMax = y2;
-  float alpha, beta, gamma;
 
   if (x1 < xMin) xMin = x1;
   if (x2 < xMin) xMin = x2;
@@ -93,27 +101,10 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
   if (y1 > yMax) yMax = y1;
   if (y0 > yMax) yMax = y0;
 
-  float f_a = f(x1, y1, x2, y2, x0, y0);
-  float f_b = f(x2, y2, x0, y0, x1, y1);
-  float f_c = f(x0, y0, x1, y1, x2, y2);
-
-  float alpha_check = f(x1, y1, x2, y2, -1, -1);
-  float beta_check = f(x2, y2, x0, y0, -1, -1);
-  float gamma_check = f(x0, y0, x1, y1, -1, -1);
-
-  // for (int y=yMin; y!=yMax; y++) {
-  //   for (int x=xMin; x!=xMax; x++) {
-  //     alpha = f(x1, y1, x2, y2, x, y) / f_a;
-  //     beta = f(x2, y2, x0, y0, x, y) / f_b;
-  //     gamma = f(x0, y0, x1, y1, x, y) / f_c;
-
-  // float f(int x0, int y0, int x1, int y1, int x, int y) {
-  //    return (y0 - y1) * x + (x1 - x0) * y + x0 * y1 - x1 * y0;
-  //  }
-
-  alpha = f(x1, y1, x2, y2, xMin-1, yMin-1) / f_a;
-  beta = f(x2, y2, x0, y0, xMin-1, yMin-1) / f_b;
-  gamma = f(x0, y0, x1, y1, xMin-1, yMin-1) / f_c;
+  // pre-determine alpha, beta, gamma and incremental values
+  float alpha = f(x1, y1, x2, y2, xMin, yMin) / f_a;
+  float beta = f(x2, y2, x0, y0, xMin, yMin) / f_b;
+  float gamma = f(x0, y0, x1, y1, xMin, yMin) / f_c;
 
   float alpha_yInc = (x2 - x1) / f_a;
   float beta_yInc = (x0 - x2) / f_b;
@@ -123,23 +114,15 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
   float beta_xInc = (y2 - y0) / f_b;
   float gamma_xInc = (y0 - y1) / f_c;
 
-  int int_flag = 0;
-
   for (int y=yMin; y<=yMax; y++) {
 
-    alpha += alpha_yInc;
-    beta += beta_yInc;
-    gamma += gamma_yInc;
+    // make temporary values so that y doesn't increment too many times
+    t_alpha = alpha;
+    t_beta = beta;
+    t_gamma = gamma;
 
     for (int x=xMin; x<=xMax; x++) {
-      float t_alpha = alpha + alpha_xInc;
-      float t_beta = beta + beta_xInc;
-      float t_gamma = gamma + gamma_xInc;
-      if (int_flag == 0) {
-        printf("%f%s%f%s%f\n", t_alpha, " ", t_beta, " ", t_gamma);
-        int_flag = 1;
-      }
-
+      // checks like this look ugly but it's better optimalisation-wise
       if (t_alpha >= 0) {
         if (t_beta >= 0) {
           if (t_gamma >= 0) {
@@ -153,6 +136,12 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
           }
         }
       }
+      t_alpha += alpha_xInc;
+      t_beta += beta_xInc;
+      t_gamma += gamma_xInc;
     }
+    alpha += alpha_yInc;
+    beta += beta_yInc;
+    gamma += gamma_yInc;
   }
 }
