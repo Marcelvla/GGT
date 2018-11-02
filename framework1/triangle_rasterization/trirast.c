@@ -53,8 +53,8 @@ draw_triangle(float x0, float y0, float x1, float y1, float x2, float y2,
 
   int int_flag = 0;
 
-  for (int y=yMin; y!=yMax; y++) {
-    for (int x=xMin; x!=xMax; x++) {
+  for (int y=yMin; y<=yMax; y++) {
+    for (int x=xMin; x<=xMax; x++) {
 
       alpha = f(x1, y1, x2, y2, x, y) / f_a;
       beta = f(x2, y2, x0, y0, x, y) / f_b;
@@ -125,13 +125,13 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
 
   int int_flag = 0;
 
-  for (int y=yMin; y!=yMax; y++) {
+  for (int y=yMin; y<=yMax; y++) {
 
     alpha += alpha_yInc;
     beta += beta_yInc;
     gamma += gamma_yInc;
 
-    for (int x=xMin; x!=xMax; x++) {
+    for (int x=xMin; x<=xMax; x++) {
       alpha += alpha_xInc;
       beta += beta_xInc;
       gamma += gamma_xInc;
@@ -145,8 +145,9 @@ draw_triangle_optimized(float x0, float y0, float x1, float y1, float x2, float 
           if (gamma >= 0) {
             if (alpha > 0 || f_a*alpha_check > 0) {
               if (beta > 0 || f_b*beta_check > 0) {
+                printf("%s\n", "test1");
                 if (gamma > 0 || f_c*gamma_check > 0) {
-                  printf("%s\n", "keke");
+                  printf("%s\n", "test2");
                   PutPixel(x, y, r, g, b);
                 }
               }
