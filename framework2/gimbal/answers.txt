@@ -1,0 +1,39 @@
+##################
+### Question 1 ###
+##################
+
+Right at the top of the function DrawRotatedTeapot:
+
+if (order == "XYZ") {
+    m4.xRotate(mvMat, rotx * (Math.PI / 180), mvMat);
+    m4.yRotate(mvMat, roty * (Math.PI / 180), mvMat);
+    m4.zRotate(mvMat, rotz * (Math.PI / 180), mvMat);
+}
+else {
+    m4.yRotate(mvMat, roty * (Math.PI / 180), mvMat);
+    m4.xRotate(mvMat, rotx * (Math.PI / 180), mvMat);
+    m4.zRotate(mvMat, rotz * (Math.PI / 180), mvMat);
+}
+
+And the switch statement in the function GimbalHandleInput:
+
+case '1':
+    order = "XYZ"
+    console.log("Rotation order is now X, Y, Z");
+    break;
+case '2':
+    order = "YXZ"
+    console.log("Rotation order is now Y, X, Z");
+    break;
+
+So normally, it rotates in the order XYZ
+But if you press 2, it rotates in the order YXZ
+
+
+##################
+### Question 2 ###
+##################
+
+Here, we can observe the gimbal lock phenomenon: teapot 3 is only moving around
+1 axe instead of 2. This happens because the Z-axis of the third teapot aligns
+with the X axis rotation which happens when you move your mouse vertically.
