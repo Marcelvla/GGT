@@ -28,18 +28,39 @@ function myScale(x, y, z) {
    return mat;
 }
 
+function cross(A, B) {
+    var x = A[1]*B[2] - A[2] * B[1];
+    var y = A[0]*B[2] - A[0] * B[2]
+    var z = A[0]*B[1] - A[1] * B[0];
+
+    return [x,y,z]
+}
+
+function replace_smallest(v) {
+  var m = Math.min.apply(null, v)
+  var index = v.indexOf(m);
+
+  if (index !== -1) {
+    v[index] = 1;
+  }
+
+  return v;
+}
+
 function orthonormalBase(x, y, z) {
     var aa = Math.hypot(x,y,z);
     var a = [x/aa, y/aa, z/aa];
 
     var tmp = a;
-    tmp[tmp.indexOf(Math.min(a))] = 1;
 
-    var tmpa = Math.cross(tmp, a);
+    tmp = replace_smallest(tmp);
+    console.log(tmp);
+
+    var tmpa = cross(tmp, a);
     var tmpaa = Math.hypot(tmpa);
     var u = [tmpa[0] / tmpaa, tmpa[1] / tmpaa, tmpa[2] / tmpaa];
 
-    var v = Math.cross(a, u);
+    var v = cross(a, u);
 
     return [u, v, a];
 }
@@ -56,9 +77,9 @@ function myRotate(angle, x, y, z) {
     // 2. Set up the three matrices making up the rotation
     //
     var A = [
-             1.0, 0.0, 0.0, 0.0,
-             0.0, 1.0, 0.0, 0.0,
-             0.0, 0.0, 1.0, 0.0,
+             base[0][0], base[0][1], base[0][2], 0.0,
+             base[1][0], base[1][1], base[1][2], 0.0,
+             base[2][0], base[2][1], base[2][2], 0.0,
              0.0, 0.0, 0.0, 1.0
             ];
 
@@ -70,10 +91,10 @@ function myRotate(angle, x, y, z) {
             ];
 
     var C = [
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            x, y, z, 1.0
+            base[0][0], base[1][0], base[2][0], 0.0,
+            base[0][1], base[1][1], base[2][1], 0.0,
+            base[0][2], base[1][2], base[2][2], 0.0,
+            0.0, 0.0, 0.0, 1.0
             ];
 
 
