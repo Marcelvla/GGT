@@ -4,10 +4,10 @@
  * Date ............ 22.07.2009
  * Created by ...... Paul Melis
  *
- * Student name ....
- * Student email ...
- * Collegekaart ....
- * Date ............
+ * Student name: Lennart Beekhuis, Marcel van de Lagemaat
+ * Student email: lennart.beekhuis@student.uva.nl, marcelvdla@gmail.com
+ * Collegekaart: 11344873, 10886699
+ * Date 16/11/2018
  * Comments ........
  *
  *
@@ -26,11 +26,34 @@
  * respectively.
  */
 
+ int factorial(int number) {
+     if (number == 0) {
+         return 1;
+     }
+
+     int fac = 1;
+     for (int i=1; i<=number; i++) {
+         fac *= i;
+     }
+     return fac;
+ }
+
+ int binom(int n, int k) {
+     return factorial(n)/(factorial(k) * factorial(n-k));
+ }
+
 void
 evaluate_bezier_curve(float *x, float *y, control_point p[], int num_points, float u)
 {
     *x = 0.0;
     *y = 0.0;
+
+    for (int i = 0; i< num_points; i++) {
+        float B = binom(i, num_points) * pow((1 - u), (i - num_points)) * pow(u, num_points);
+        control_point controlXY = p[i];
+        *x += B * controlXY.x ;
+        *y += B * controlXY.y;
+    }
 }
 
 /* Draw a Bezier curve defined by the control points in p[], which
