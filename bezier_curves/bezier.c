@@ -38,8 +38,10 @@
      return fac;
  }
 
- int binom(int n, int k) {
-     return factorial(n)/(factorial(k) * factorial(n-k));
+ float binom(int n, int k) {
+     float b = ((float) factorial(n))/(factorial(k) * factorial(n-k));
+     // printf("%f\n", b);
+     return b;
  }
 
 void
@@ -47,12 +49,14 @@ evaluate_bezier_curve(float *x, float *y, control_point p[], int num_points, flo
 {
     *x = 0.0;
     *y = 0.0;
+    float B;
 
-    for (int i = 0; i< num_points; i++) {
-        float B = binom(i, num_points) * pow((1 - u), (i - num_points)) * pow(u, num_points);
-        control_point controlXY = p[i];
-        *x += B * controlXY.x ;
-        *y += B * controlXY.y;
+    for (int i = 0; i<num_points; i++) {
+        B = binom(i, num_points-1) * (float) pow((1 - u), (num_points-1 - i)) * pow(u, i);
+        printf("%f\n", pow((1 - u), (i - num_points)));
+        *x += B * p[i].x;
+        *y += B * p[i].y;
+        // ("%f, %f, %f\n", p[i].x, p[i].y, B);
     }
 }
 
@@ -76,19 +80,28 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
 {
     GLuint buffer[1];
 
+    float vertices[(num_segments + 1) * 2];
+
     /* Write your own code to create and fill the array here. */
+
+    for (int i=0; i<=num_segments; i++) {
+        float x, y;
+        evaluate_bezier_curve(&x, &y, p, num_points, i/num_segments);
+        vertices[i * 2] = x;
+        vertices[i * 2 + 1] = y;
+    }
 
 
     // This creates the VBO and binds an array to it.
     glGenBuffers(1, buffer);
     glBindBuffer(GL_ARRAY_BUFFER, *buffer);
-    glBufferData(GL_ARRAY_BUFFER, 0 /* Fill in the right size here*/,
-                 NULL /*Fill in the pointer to the array*/, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (num_segments + 1) * 2,
+                 vertices, GL_STATIC_DRAW);
 
     // This tells OpenGL to draw what is in the buffer as a Line Strip.
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, 0);
-    glDrawArrays(GL_LINE_STRIP, 0, 0/* Fill in the number of steps to be drawn*/);
+    glDrawArrays(GL_LINE_STRIP, 0, num_points);
     glDisableClientState(GL_VERTEX_ARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDeleteBuffers(1, buffer);
