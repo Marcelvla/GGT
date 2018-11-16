@@ -52,11 +52,9 @@ evaluate_bezier_curve(float *x, float *y, control_point p[], int num_points, flo
     float B;
 
     for (int i = 0; i<num_points; i++) {
-        B = binom(i, num_points-1) * (float) pow((1 - u), (num_points-1 - i)) * pow(u, i);
-        printf("%f\n", pow((1 - u), (i - num_points)));
+        B = binom(num_points-1, i) * (float) pow((1 - u), (num_points - 1 - i)) * pow(u, i);
         *x += B * p[i].x;
         *y += B * p[i].y;
-        // ("%f, %f, %f\n", p[i].x, p[i].y, B);
     }
 }
 
@@ -86,7 +84,7 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
 
     for (int i=0; i<=num_segments; i++) {
         float x, y;
-        evaluate_bezier_curve(&x, &y, p, num_points, i/num_segments);
+        evaluate_bezier_curve(&x, &y, p, num_points, i/((float)num_segments));
         vertices[i * 2] = x;
         vertices[i * 2 + 1] = y;
     }
@@ -101,7 +99,7 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
     // This tells OpenGL to draw what is in the buffer as a Line Strip.
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, 0);
-    glDrawArrays(GL_LINE_STRIP, 0, num_points);
+    glDrawArrays(GL_LINE_STRIP, 0, num_segments + 1);
     glDisableClientState(GL_VERTEX_ARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDeleteBuffers(1, buffer);
