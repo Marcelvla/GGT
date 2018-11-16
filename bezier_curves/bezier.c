@@ -18,15 +18,13 @@
 #include "bezier.h"
 #include <stdio.h>
 
-/* Given a Bezier curve defined by the 'num_points' control points
- * in 'p' compute the position of the point on the curve for parameter
- * value 'u'.
- *
- * Return the x and y values of the point by setting *x and *y,
- * respectively.
+
+/* Function factorial calculates the factorial of number.
+ * Returns 1 if number is 0.
  */
 
- int factorial(int number) {
+int
+factorial(int number) {
      if (number == 0) {
          return 1;
      }
@@ -36,12 +34,24 @@
          fac *= i;
      }
      return fac;
- }
+}
 
- float binom(int n, int k) {
-     float b = ((float) factorial(n))/(factorial(k) * factorial(n-k));
-     return b;
- }
+/* Function binom returns binomial of n and k. Casts one value to a float because
+ * n and k are both ints and we want the return value to be a float.
+ */
+
+float
+binom(int n, int k) {
+     return ((float) factorial(n))/(factorial(k) * factorial(n-k));
+}
+
+ /* Given a Bezier curve defined by the 'num_points' control points
+  * in 'p' compute the position of the point on the curve for parameter
+  * value 'u'.
+  *
+  * Return the x and y values of the point by setting *x and *y,
+  * respectively.
+  */
 
 void
 evaluate_bezier_curve(float *x, float *y, control_point p[], int num_points, float u)
@@ -50,6 +60,7 @@ evaluate_bezier_curve(float *x, float *y, control_point p[], int num_points, flo
     *y = 0.0;
     float B;
 
+    // Loop over num_points and compute x and y value for each control_point
     for (int i = 0; i<num_points; i++) {
         B = binom(num_points-1, i) * (float) pow((1 - u), (num_points - 1 - i)) * pow(u, i);
         *x += B * p[i].x;
@@ -79,8 +90,9 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
 
     float vertices[(num_segments + 1) * 2];
 
-    /* Write your own code to create and fill the array here. */
 
+    // Loop over num_segments and compute x and y for each, then add them
+    // into the array.
     for (int i=0; i<=num_segments; i++) {
         float x, y;
         evaluate_bezier_curve(&x, &y, p, num_points, i/((float)num_segments));
@@ -113,30 +125,21 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
 int
 intersect_cubic_bezier_curve(float *y, control_point p[], float x)
 {
-    float X;
-    for (float i = 0; i <=1; i+=0.0001) {
-        evaluate_bezier_curve(&X, y, p, 4, i);
-        // printf("%f, %f, %f\n", X, *y, x);
-        if (X - x >= 0 && X - x <= 0.001) {
-            // printf("%f\n\n", X - x);
-            return 1;
-            // for(; i <= 1; i+=0.01) {
-            //     evaluate_bezier_curve(&X, y, p, 4, i);
-            //     if (X - x >= 0 && X - x <= 0.01) {
-            //         printf("%f\n\n", X - x);
-            //
-            //         for(; i <= 1; i+=0.001) {
-            //             evaluate_bezier_curve(&X, y, p, 4, i);
-            //             // printf("third: %f\n\n", X - x);
-            //             if (X - x >= 0 && X - x <= 0.001) {
-            //                 printf("FOUND IT\n");
-            //                 return 1;
-            //             }
-            //         }
-            //     }
-            // }
-        }
+    // Check if x is within the first and last control point.
+    if (x > p[3].x || x < p[0].x) {
+        return 0;
     }
 
-    return 0;
+    float X = 1;
+    float t = 0.5;
+    float step = 0.25;
+
+    // Binary search until we are within the specified boundary.
+    while (X-x > 0.001 || X-x < -0.001) {
+        evaluate_bezier_curve(&X, y, p, 4, t);
+        if (X < x) t += step;
+        else t -= step;
+        step = step/2;
+    }
+    return 1;
 }
