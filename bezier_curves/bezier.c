@@ -40,7 +40,6 @@
 
  float binom(int n, int k) {
      float b = ((float) factorial(n))/(factorial(k) * factorial(n-k));
-     // printf("%f\n", b);
      return b;
  }
 
@@ -114,5 +113,30 @@ draw_bezier_curve(int num_segments, control_point p[], int num_points)
 int
 intersect_cubic_bezier_curve(float *y, control_point p[], float x)
 {
+    float X;
+    for (float i = 0; i <=1; i+=0.0001) {
+        evaluate_bezier_curve(&X, y, p, 4, i);
+        // printf("%f, %f, %f\n", X, *y, x);
+        if (X - x >= 0 && X - x <= 0.001) {
+            // printf("%f\n\n", X - x);
+            return 1;
+            // for(; i <= 1; i+=0.01) {
+            //     evaluate_bezier_curve(&X, y, p, 4, i);
+            //     if (X - x >= 0 && X - x <= 0.01) {
+            //         printf("%f\n\n", X - x);
+            //
+            //         for(; i <= 1; i+=0.001) {
+            //             evaluate_bezier_curve(&X, y, p, 4, i);
+            //             // printf("third: %f\n\n", X - x);
+            //             if (X - x >= 0 && X - x <= 0.001) {
+            //                 printf("FOUND IT\n");
+            //                 return 1;
+            //             }
+            //         }
+            //     }
+            // }
+        }
+    }
+
     return 0;
 }
