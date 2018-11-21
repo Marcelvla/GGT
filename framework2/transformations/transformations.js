@@ -52,13 +52,14 @@ function replace_smallest(v) {
 function orthonormalBase(x, y, z) {
     var aa = Math.hypot(x,y,z);
     var a = [x/aa, y/aa, z/aa];
-    var tmp = [a[0], a[1], a[2]];
-    var aaaaa = replace_smallest(tmp);
-    console.log(aaaaa);
+
+    var tmp = a.slice();
+    tmp = replace_smallest(tmp);
 
     var tmpa = cross(tmp, a);
+    console.log(tmpa);
 
-    var tmpaa = Math.hypot(tmpa);
+    var tmpaa = Math.hypot(tmpa[0], tmpa[1], tmpa[2]);
     var u = [tmpa[0] / tmpaa, tmpa[1] / tmpaa, tmpa[2] / tmpaa];
 
     var v = cross(a, u);
