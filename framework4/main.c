@@ -1,13 +1,12 @@
 /* Computer Graphics and Game Technology, Assignment Ray-tracing
  *
- * Student name ....
- * Student email ...
- * Collegekaart ....
- * Date ............
+ * Student name: Lennart Beekhuis en Marcel van de Lagemaat
+ * Student email: lennart.beekhuis@student.uva.nl, marcelvdla@gmail.com
+ * Collegekaart: 11344873, 10886699
+ * Date: 30/11/2018
  * Comments ........
  *
  *
- * (always fill in these fields before submitting!!)
  */
 
 #include <sys/time.h>
@@ -412,19 +411,33 @@ ray_trace(void)
     image_plane_height = 2.0 * tan(0.5*VFOV/180*M_PI);
     image_plane_width = image_plane_height * (1.0 * framebuffer_width / framebuffer_height);
 
-    // ...
-    // ...
-    // ...
+    float l = -0.5;
+    float r = image_plane_width - 0.5;
+    float b = -0.5;
+    float t = image_plane_height - 0.5;
+
+    float tminb = t - b;
+    float rminl = r - l;
 
     // Loop over all pixels in the framebuffer
     for (j = 0; j < framebuffer_height; j++)
     {
+        float v =  b +  tminb * ((j + 0.5) / image_plane_height);
         for (i = 0; i < framebuffer_width; i++)
         {
-            // ...
-            // ...
-            // ...
+            float u = l + rminl * ((i + 0.5) / image_plane_width);
 
+            float x = u * forward_vector.x + v * right_vector.x + up_vector.x;
+            float y = u * forward_vector.y + v * right_vector.y + up_vector.y;
+            float z = u * forward_vector.z + v * right_vector.z + up_vector.z;
+
+            vec3 viewingray = v3_create(x - scene_camera_position.x,
+                                        y - scene_camera_position.y,
+                                        z - scene_camera_position.z);
+
+            printf("%f, %f, %f\n", scene_camera_position.x,scene_camera_position.y, scene_camera_position.z );
+
+            color = ray_color(0, scene_camera_position, viewingray);
             // Output pixel color
             put_pixel(i, j, color.x, color.y, color.z);
         }
