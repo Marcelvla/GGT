@@ -30,13 +30,27 @@
 vec3
 shade_constant(intersection_point ip)
 {
-    return v3_create(1, 0, 0);
+        return v3_create(1, 0, 0);
 }
 
 vec3
 shade_matte(intersection_point ip)
 {
-    return v3_create(1, 0, 0);
+    float intensity = scene_ambient_light;
+
+    for (int i = 0; i < scene_num_lights; i++) {
+        vec3 vec_light = v3_subtract(scene_lights[i].position, ip.p);
+        vec_light = v3_normalize(vec_light);
+        float scene_light = v3_dotprod(ip.n, vec_light) * scene_lights[i].intensity;
+
+        int shadow = shadow_check(v3_add(ip.p, v3_create(0.001, 0.001, 0.001)), vec_light);
+        shadow += shadow_check(v3_add(ip.p, v3_create(-0.001, -0.001, -0.001)), vec_light);
+
+        if (scene_light > 0 && shadow < 2 ) {
+            intensity += scene_light;
+        }
+    }
+    return v3_create(intensity, intensity, intensity);
 }
 
 vec3
