@@ -411,31 +411,21 @@ ray_trace(void)
     image_plane_height = 2.0 * tan(0.5*VFOV/180*M_PI);
     image_plane_width = image_plane_height * (1.0 * framebuffer_width / framebuffer_height);
 
-    float l = -0.5;
-    float r = image_plane_width - 0.5;
-    float b = -0.5;
-    float t = image_plane_height - 0.5;
-
-    float tminb = t - b;
-    float rminl = r - l;
+    float r = image_plane_width;
+    float t = image_plane_height;
 
     // Loop over all pixels in the framebuffer
     for (j = 0; j < framebuffer_height; j++)
     {
-        float v =  b +  tminb * ((j + 0.5) / image_plane_height);
+        float v = t * (((float)j + 0.5) / framebuffer_height);
         for (i = 0; i < framebuffer_width; i++)
         {
-            float u = l + rminl * ((i + 0.5) / image_plane_width);
+            float u = r * (((float)i + 0.5) / framebuffer_width);
 
-            float x = u * forward_vector.x + v * right_vector.x + up_vector.x;
-            float y = u * forward_vector.y + v * right_vector.y + up_vector.y;
-            float z = u * forward_vector.z + v * right_vector.z + up_vector.z;
+            vec3 x = v3_multiply(right_vector, u);
+            vec3 y = v3_multiply(up_vector, v);
 
-            vec3 viewingray = v3_create(x - scene_camera_position.x,
-                                        y - scene_camera_position.y,
-                                        z - scene_camera_position.z);
-
-            printf("%f, %f, %f\n", scene_camera_position.x,scene_camera_position.y, scene_camera_position.z );
+            vec3 viewingray = v3_add(v3_add(x, y), forward_vector);
 
             color = ray_color(0, scene_camera_position, viewingray);
             // Output pixel color
