@@ -411,20 +411,24 @@ ray_trace(void)
     image_plane_height = 2.0 * tan(0.5*VFOV/180*M_PI);
     image_plane_width = image_plane_height * (1.0 * framebuffer_width / framebuffer_height);
 
-    float r = image_plane_width;
-    float t = image_plane_height;
+    // compute pixel width and height to make the ray tracing incremental
+    float pixel_width = image_plane_width / framebuffer_width;
+    float pixel_height = image_plane_height / framebuffer_height;
+
+    // starting value of
+    float viewing_y = - pixel_height - image_plane_height / 2;
 
     // Loop over all pixels in the framebuffer
     for (j = 0; j < framebuffer_height; j++)
     {
-        float v = t * (((float)j + 0.5) / framebuffer_height);
+        viewing_y += pixel_height;
+        vec3 y = v3_multiply(up_vector, viewing_y);
+        float viewing_x = -pixel_width - image_plane_width / 2;
+
         for (i = 0; i < framebuffer_width; i++)
         {
-            float u = r * (((float)i + 0.5) / framebuffer_width);
-
-            vec3 x = v3_multiply(right_vector, u);
-            vec3 y = v3_multiply(up_vector, v);
-
+            viewing_x += pixel_width;
+            vec3 x = v3_multiply(right_vector, viewing_x);
             vec3 viewingray = v3_add(v3_add(x, y), forward_vector);
 
             color = ray_color(0, scene_camera_position, viewingray);
