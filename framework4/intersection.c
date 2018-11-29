@@ -179,6 +179,21 @@ static int
 find_first_intersected_bvh_triangle(intersection_point* ip,
     vec3 ray_origin, vec3 ray_direction)
 {
+    if (bbox_intersect(tmin, tmax, bbox, ray_origin, ray_direction, t0, t1) == 0) {
+        return 0;
+    }
+
+    bvh_node current = *bvh_root;
+    bvh_node previous;
+
+    while (current ) {
+        if (inner_node_left_child(current)) {
+
+            current = inner_node_right_child(current);
+        } else {
+
+        }
+    }
     return 0;
 }
 
@@ -288,4 +303,3 @@ shadow_check(vec3 ray_origin, vec3 ray_direction)
 
     return 0;
 }
-
