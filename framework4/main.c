@@ -416,6 +416,7 @@ ray_trace(void)
     float pixel_height = image_plane_height / framebuffer_height;
 
     // starting value of
+<<<<<<< HEAD
     float viewing_y =  (-pixel_height - image_plane_height) / 2;
 
     // Loop over all pixels in the framebuffer
@@ -424,20 +425,76 @@ ray_trace(void)
         viewing_y += pixel_height;
         vec3 y = v3_multiply(up_vector, viewing_y);
         float viewing_x = (-pixel_width - image_plane_width) / 2;
+=======
+    float viewing_y = (- pixel_height - image_plane_height) / 2;
 
-        for (i = 0; i < framebuffer_width; i++)
-        {
-            viewing_x += pixel_width;
-            vec3 x = v3_multiply(right_vector, viewing_x);
-            vec3 viewingray = v3_add(v3_add(x, y), forward_vector);
+    // Loop over all pixels in the framebuffer
+    if (do_antialiasing == 0) {
+      for (j = 0; j < framebuffer_height; j++)
+      {
+          viewing_y += pixel_height;
+          vec3 y = v3_multiply(up_vector, viewing_y);
+          float viewing_x = (- pixel_width - image_plane_width) / 2;
 
-            color = ray_color(0, scene_camera_position, viewingray);
-            // Output pixel color
-            put_pixel(i, j, color.x, color.y, color.z);
-        }
+          for (i = 0; i < framebuffer_width; i++)
+          {
+              viewing_x += pixel_width;
+              vec3 x = v3_multiply(right_vector, viewing_x);
+              vec3 viewingray = v3_add(v3_add(x, y), forward_vector);
 
-        sprintf(buf, "Ray-tracing ::: %.0f%% done", 100.0*j/framebuffer_height);
-        glutSetWindowTitle(buf);
+              color = ray_color(0, scene_camera_position, viewingray);
+              // Output pixel color
+              put_pixel(i, j, color.x, color.y, color.z);
+          }
+
+          sprintf(buf, "Ray-tracing ::: %.0f%% done", 100.0*j/framebuffer_height);
+          glutSetWindowTitle(buf);
+      }
+    }
+>>>>>>> d7971132589e1e5c9e554eb17f5f9ccd70ca01d3
+
+    if (do_antialiasing == 1) {
+      float pixel_height_half = pixel_height / 2;
+      float pixel_width_half = pixel_width / 2;
+
+      for (j = 0; j < framebuffer_height; j++)
+      {
+          viewing_y += pixel_height_half;
+          vec3 y1 = v3_multiply(up_vector, viewing_y);
+
+          viewing_y += pixel_height_half;
+          vec3 y2 = v3_multiply(up_vector, viewing_y);
+
+          float viewing_x = (- pixel_width - image_plane_width) / 2;
+
+          for (i = 0; i < framebuffer_width; i++)
+          {
+              viewing_x += pixel_width_half;
+              vec3 x1 = v3_multiply(right_vector, viewing_x);
+
+              viewing_x += pixel_width_half;
+              vec3 x2 = v3_multiply(right_vector, viewing_x);
+
+              vec3 viewingray1 = v3_add(v3_add(x1, y1), forward_vector);
+              vec3 viewingray2 = v3_add(v3_add(x1, y2), forward_vector);
+              vec3 viewingray3 = v3_add(v3_add(x2, y1), forward_vector);
+              vec3 viewingray4 = v3_add(v3_add(x2, y2), forward_vector);
+
+              vec3 color1 = ray_color(0, scene_camera_position, viewingray1);
+              vec3 color2 = ray_color(0, scene_camera_position, viewingray2);
+              vec3 color3 = ray_color(0, scene_camera_position, viewingray3);
+              vec3 color4 = ray_color(0, scene_camera_position, viewingray4);
+
+              color = v3_add(v3_add(v3_add(v3_multiply(color1, 0.25), v3_multiply(color2, 0.25)),
+                      v3_multiply(color3, 0.25)),v3_multiply(color4, 0.25));
+
+              // Output pixel color
+              put_pixel(i, j, color.x, color.y, color.z);
+          }
+
+          sprintf(buf, "Ray-tracing ::: %.0f%% done", 100.0*j/framebuffer_height);
+          glutSetWindowTitle(buf);
+      }
     }
 
     // Done!
