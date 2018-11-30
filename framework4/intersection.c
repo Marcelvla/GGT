@@ -1,13 +1,13 @@
 /* Computer Graphics and Game Technology, Assignment Ray-tracing
  *
- * Student name ....
- * Student email ...
- * Collegekaart ....
- * Date ............
+ * Student name .... Marcel van de Lagemaat, Lennart Beekhuis
+ * Student email ... marcelvdla@gmail.com, lennart.beekhuis@student.uva.nl
+ * Collegekaart .... 10886699, 11344873
+ * Date ............ 30/11/2018
  * Comments ........
  *
  *
- * (always fill in these fields before submitting!!)
+ *
  */
 
 #include <math.h>
@@ -139,7 +139,7 @@ ray_intersects_sphere(intersection_point* ip, sphere sph,
     C = v3_dotprod(diff, diff) - sph.radius * sph.radius;
 
     D = B*B - 4*A*C;
-
+current = inner_node_right_child
     if (D < 0.0)
         return 0;
 
@@ -179,22 +179,74 @@ static int
 find_first_intersected_bvh_triangle(intersection_point* ip,
     vec3 ray_origin, vec3 ray_direction)
 {
-    if (bbox_intersect(tmin, tmax, bbox, ray_origin, ray_direction, t0, t1) == 0) {
+    bvh_node root = *bvh_root;
+
+    float tmin, tmax;
+    if (!bbox_intersect(&tmin, &tmax, current->bbox, ray_origin, ray_direction, -C_INFINITY, C_INFINITY)) {
         return 0;
     }
 
-    bvh_node current = *bvh_root;
-    bvh_node previous;
+    return find_first_recursive(ip, ray_origin, ray_direction, root, tmin, tmax, 0);
+}
 
-    while (current ) {
-        if (inner_node_left_child(current)) {
+static int find_first_recursive(intersection_point* ip, vec3 ray_origin,
+                                vec3 ray_direction, bvh_node current,
+                                float tmin, float tmax, int found)
+{
+    bvh_node leftchild = inner_node_left_child(current);
+    bvh_node rightchild = inner_node_right_child(current);
 
-            current = inner_node_right_child(current);
-        } else {
-
+    if (current->is_leaf) {
+        triangle* tri = leaf_node_triangles(current);
+        int i = leaf_node_num_triangles(current);
+        for (int j = 0; j < i; j++) {
+            if (ray_intersects_triangle(ip, tri[j])) {
+                found = 1;
+                return found;
+            }
         }
     }
-    return 0;
+
+    float t_min_left, t_min_right, t_max_left, t_max_right;
+    int left_intersect = bbox_intersect(&t_min_left, &t_max_left, leftchild->bbox, ray_origin, ray_direction, tmin, tmax);
+    int right_intersect = bbox_intersect(&t_min_right, &t_max_right, rightchild->bbox, ray_origin, ray_direction, tmin, tmax);
+
+    if (left_intersect) {
+        if(right_intersect) {
+            if (/*bbox right better than left*/) {
+                find_first_recursive(ip, ray_origin, ray_direction, rightchild);
+            } else {
+                find_first_recursive(ray_origin, ray_direction, leftchild);
+            }
+        } else {
+            find_first_recursive(ray_origin, ray_direction, leftchild);
+        }
+    } else if (right_intersect) {
+        find_first_recursive(ray_origin, ray_direction, rightchild);
+    } else if (!left_intersect && !right_intersect) {
+        return 0;
+    }
+
+    return found;
+}
+
+    //     if (leftchild->is_leaf == 1) {
+    //         triangle* tri = leaf_node_triangles(leftchild);
+    //         int i = leaf_node_num_triangles(leftchild);
+    //         for (int j = 0; j < i; j++) {
+    //             if (ray_intersects_triangle(ip, tri[j])) {
+    //                 return 1;
+    //             }
+    //         }
+    //     } else if (rightchild->is_leaf == 0) {
+    //         triangle* tri = leaf_node_triangles(rightchild);
+    //         int i = leaf_node_num_triangles(rightchild);
+    //         for (int j = 0; j < i; j++) {
+    //             if (ray_intersects_triangle(ip, tri[j])) {
+    //                 return 1;
+    //             }
+    //     }
+    // }
 }
 
 // Returns the nearest hit of the given ray with objects in the scene

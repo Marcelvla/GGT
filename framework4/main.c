@@ -416,14 +416,14 @@ ray_trace(void)
     float pixel_height = image_plane_height / framebuffer_height;
 
     // starting value of
-    float viewing_y = - pixel_height - image_plane_height / 2;
+    float viewing_y =  (-pixel_height - image_plane_height) / 2;
 
     // Loop over all pixels in the framebuffer
     for (j = 0; j < framebuffer_height; j++)
     {
         viewing_y += pixel_height;
         vec3 y = v3_multiply(up_vector, viewing_y);
-        float viewing_x = - pixel_width - image_plane_width / 2;
+        float viewing_x = (-pixel_width - image_plane_width) / 2;
 
         for (i = 0; i < framebuffer_width; i++)
         {
