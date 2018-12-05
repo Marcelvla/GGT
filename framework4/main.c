@@ -416,16 +416,14 @@ ray_trace(void)
     float pixel_height = image_plane_height / framebuffer_height;
 
     // starting value of
-<<<<<<< HEAD
     float viewing_y =  (-pixel_height - image_plane_height) / 2;
 
     // Loop over all pixels in the framebuffer
     for (j = 0; j < framebuffer_height; j++)
     {
-        viewing_y += pixel_height;
-        vec3 y = v3_multiply(up_vector, viewing_y);
-        float viewing_x = (-pixel_width - image_plane_width) / 2;
-=======
+    viewing_y += pixel_height;
+    vec3 y = v3_multiply(up_vector, viewing_y);
+    float viewing_x = (-pixel_width - image_plane_width) / 2;
     float viewing_y = (- pixel_height - image_plane_height) / 2;
 
     // Loop over all pixels in the framebuffer
@@ -451,8 +449,7 @@ ray_trace(void)
           glutSetWindowTitle(buf);
       }
     }
->>>>>>> d7971132589e1e5c9e554eb17f5f9ccd70ca01d3
-
+    
     if (do_antialiasing == 1) {
       float pixel_height_half = pixel_height / 2;
       float pixel_width_half = pixel_width / 2;
