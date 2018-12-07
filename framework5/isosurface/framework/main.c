@@ -5,10 +5,10 @@
  * Date ............ 29.10.2007
  * Created by ...... Paul Melis
  *
- * Student name ....
- * Student email ...
- * Collegekaart ....
- * Date ............
+ * Student name .... Marcel van de Lagemaat, Lennart Beekhuis
+ * Student email ... marcelvdla@gmail.com, lennart.beekhuis@student.uva.nl
+ * Collegekaart .... 10886699, 11344873
+ * Date ............ 7/12/208
  * Comments ........
  *
  * (always fill in these fields before submitting!!)
@@ -188,6 +188,7 @@ void FillArrayWithCubes(void)
 
 void FillArrayWithIsosurface(void)
 {
+    for
 }
 
 void DrawScene(void)
