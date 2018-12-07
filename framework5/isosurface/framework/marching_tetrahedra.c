@@ -44,6 +44,7 @@ static int
 generate_tetrahedron_triangles(triangle *triangles, unsigned char isovalue, cell c, int v0, int v1, int v2, int v3)
 {
     triangle t1, t2;
+    int t2_assigned = 0;
 
     int flag0 = c.value[v0] > isovalue ? 1 : 0;
     int flag1 = c.value[v1] > isovalue ? 1 : 0;
@@ -88,6 +89,7 @@ generate_tetrahedron_triangles(triangle *triangles, unsigned char isovalue, cell
         t2.p[0] = interpolate_points(isovalue, c.p[v0], c.p[v2], c.value[v0], c.value[v2]);
         t2.p[1] = interpolate_points(isovalue, c.p[v1], c.p[v2], c.value[v1], c.value[v2]);
         t2.p[2] = interpolate_points(isovalue, c.p[v0], c.p[v3], c.value[v0], c.value[v3]);
+        t2_assigned = 1;
     }
 
     if (corner == 5 || corner == 10) {
@@ -98,6 +100,7 @@ generate_tetrahedron_triangles(triangle *triangles, unsigned char isovalue, cell
         t2.p[0] = interpolate_points(isovalue, c.p[v0], c.p[v1], c.value[v0], c.value[v1]);
         t2.p[1] = interpolate_points(isovalue, c.p[v1], c.p[v2], c.value[v1], c.value[v2]);
         t2.p[2] = interpolate_points(isovalue, c.p[v0], c.p[v3], c.value[v0], c.value[v3]);
+        t2_assigned = 1;
     }
 
     if (corner == 6 || corner == 9) {
@@ -108,14 +111,15 @@ generate_tetrahedron_triangles(triangle *triangles, unsigned char isovalue, cell
         t2.p[0] = interpolate_points(isovalue, c.p[v2], c.p[v3], c.value[v2], c.value[v3]);
         t2.p[1] = interpolate_points(isovalue, c.p[v0], c.p[v1], c.value[v0], c.value[v1]);
         t2.p[2] = interpolate_points(isovalue, c.p[v1], c.p[v3], c.value[v1], c.value[v3]);
+        t2_assigned = 1;
     }
 
-    if (t2 == NULL) {
-        *triangle[sizeof(struct triangle) * triangles_created] = t1;
+    if (t2_assigned) {
+        triangles[sizeof(t1) * triangles_created] = t1;
         return 1;
     } else {
-        *triangle[sizeof(struct triangle) * triangles_created] = t1;
-        *triangle[sizeof(struct triangle) * (triangles_created + 1)] = t2;
+        triangles[sizeof(t1) * triangles_created] = t1;
+        triangles[sizeof(t1) * (triangles_created + 1)] = t2;
         return 2;
     }
 }
@@ -132,17 +136,18 @@ generate_tetrahedron_triangles(triangle *triangles, unsigned char isovalue, cell
 int
 generate_cell_triangles(triangle *triangles, cell c, unsigned char isovalue)
 {
+    triangle t;
     triangles_created = 0;
-    *triangles = malloc(sizeof(struct triangle)*12);
+    // triangles = malloc(sizeof(t)*12);
 
     // make different arrays which we combine into one triangle array
 
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 1, 3, 7);
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 1, 5, 7);
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 2, 6, 7);
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 2, 3, 7);
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 4, 5, 7);
-    triangles_created += generate_tetrahedron_triangles(*triangles, isovalue, c, 0, 4, 6, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 1, 3, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 1, 5, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 2, 6, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 2, 3, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 4, 5, 7);
+    triangles_created += generate_tetrahedron_triangles(triangles, isovalue, c, 0, 4, 6, 7);
 
     return triangles_created;
 }

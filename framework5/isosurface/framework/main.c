@@ -188,7 +188,42 @@ void FillArrayWithCubes(void)
 
 void FillArrayWithIsosurface(void)
 {
-    for
+    int triangles_created = 0;
+    triangle t;
+    triangle *triangles = malloc(sizeof(t)*12);
+
+
+    for (int i = 0; i < nx; i ++) {
+        for (int j = 0; j < ny; j++) {
+            for (int k = 0; k < nz; k++ ) {
+                cell c =  get_cell(i, j, k);
+                int temp_triangles_created = generate_cell_triangles(triangles, c, isovalue);
+                printf("%i\n", temp_triangles_created);
+
+                for (int l = 0; l < temp_triangles_created; l++) {
+                    int index = sizeof(t) * l;
+                    printf("index: %i\n", index);
+                    triangle current = triangles[index];
+
+                    vec3 vert1 = v3_subtract(current.p[0], current.p[1]);
+                    vec3 vert2 = v3_subtract(current.p[0], current.p[2]);
+                    vec3 vert3 = v3_subtract(current.p[1], current.p[2]);
+                    vec3 surface_normal = v3_crossprod( v3_subtract(current.p[0], current.p[1]),
+                                                        v3_subtract(current.p[1], current.p[2]));
+
+                    AddVertexToArray(vert1, surface_normal);
+                    AddVertexToArray(vert2, surface_normal);
+                    AddVertexToArray(vert3, surface_normal);
+
+                }
+
+                triangles_created += temp_triangles_created;
+                printf("total triangles: %i\n", triangles_created);
+            }
+        }
+    }
+
+    printf("We have created: %i triangles \n", triangles_created);
 }
 
 void DrawScene(void)
