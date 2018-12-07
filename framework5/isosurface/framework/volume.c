@@ -38,6 +38,19 @@ cell
 get_cell(int i, int j, int k)
 {
     cell c;
+    int counter = 0;
+
+    for (int ii = 0; ii < 2; ii++) {
+        for (int jj = 0; jj < 2; jj++) {
+            for (int kk = 0; kk < 2; kk++) {
+                vec3 index = v3_create(i+ii, j+jj, k+kk);
+                c.p[counter] = index;
+                c.value[counter] = volume[voxel2idx(i+ii, j+jj, k+kk)];
+                counter += 1;
+            }
+        }
+    }
+
     return c;
 }
 
