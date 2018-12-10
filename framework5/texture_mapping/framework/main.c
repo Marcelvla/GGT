@@ -139,9 +139,9 @@ InitializePolygonlists(void)
 
     // A single tree object
     polylistTreeLeafs = CreatePolylist(10);
-    createSphere(polylistTreeLeafs, 0.7, 0.7, 0.7,  0, 1.7, 0,  0, 1, 0);
+    loadPolygonalObject(polylistTreeLeafs, "leaf.obj", texture_names, 0.27, 0.0, 1.5, 0.0);
     for (i = 0; i < polylistTreeLeafs->length; i++)
-        polylistTreeLeafs->items[i].texture_id = texture_names[0];
+        polylistTreeLeafs->items[i].texture_id = texture_names[6];
 
     polylistTreeStem = CreatePolylist(10);
     createCylinder(polylistTreeStem, 0.075, 1.8,  0, 0, 0,  0.5, 0.3, 0);
@@ -433,7 +433,11 @@ DrawGLScene(void)
         glScalef(1, 1 + (rand_float()-0.5)*0.6, 1);
 
         DrawPolylist(polylistTreeStem);
-        DrawPolylist(polylistTreeLeafs);
+
+        for (int i = 0; i < 8; i++) {
+            glRotatef(360/8, 0, 1, 0);
+            DrawPolylist(polylistTreeLeafs);
+        }
 
         glPopMatrix();
     }
