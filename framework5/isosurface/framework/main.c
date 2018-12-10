@@ -224,6 +224,7 @@ void FillArrayWithIsosurface(void)
     }
 
     printf("We have created: %i triangles \n", triangles_created);
+    free(triangles);
 }
 
 void DrawScene(void)
