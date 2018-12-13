@@ -49,10 +49,32 @@ void load_world(unsigned int level)
         return;
     }
 
+
     // Create a Box2D world and populate it with all bodies for this level
     // (including the ball).
-}
+    b2Vec2 gravity(0.0f, -9.81f);
+    b2World* world = new b2World(gravity);
 
+    b2CircleShape circleShape;
+    circleShape.m_p.Set(0, 0);
+    circleShape.m_radius = 1;
+
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position.Set(4.0f, 3.0f);
+    b2Body* circleBody = world->CreateBody(&bodyDef);
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &circleShape;
+    circleBody->CreateFixture(&fixtureDef);
+
+    // Configure step method
+    float timeStep = 1.0/60.0;
+    int velocityIterations = 6;
+    int positionIterations = 2;
+    world->Step(timeStep, velocityIterations, positionIterations);
+
+}
 
 /*
  * Called when we should redraw the scene (i.e. every frame).
@@ -68,10 +90,11 @@ void draw(void)
     glColor3f(0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-
-    //
-    // Do any logic and drawing here.
-    //
+    // Draw stuff
+    world.Step();
+    b2Vec2 position = circleBody->GetPosition();
+    float angle = circleBody->GetAngle();
+    printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
 
     // Show rendered frame
