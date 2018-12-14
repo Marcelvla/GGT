@@ -52,16 +52,17 @@ void circle_array(float* vertices, float start_x, float start_y, float r, int nu
 {
     vertices[0] = start_x;
     vertices[1] = start_y; // middle point
-    for(int i = 0; i < num_segments; i++)
+    for(int i = 0; i <= num_segments; i++)
     {
         // Calculate angle, x and y component, then add to array
         float theta = 2.0f * 3.1415926f * float(i) / float(num_segments);
         float x = r * cosf(theta);
         float y = r * sinf(theta);
-        vertices[(i+1) * 2] = x;
-        vertices[(i+1) * 2 + 1] = y;
+        //printf("%f%f\n", start_x + x, start_y + y);
+        vertices[(i + 1) * 2] = start_x + x;
+        vertices[(i + 1) * 2 + 1] = start_y + y;
     }
-    glEnd();
+    //printf("%s\n", "end");
 }
 
 /*
@@ -86,7 +87,7 @@ void load_world(unsigned int level)
 
     b2CircleShape circleShape;
     circleShape.m_p.Set(0, 0);
-    circleShape.m_radius = 1;
+    circleShape.m_radius = 0.2f;
 
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
@@ -98,7 +99,6 @@ void load_world(unsigned int level)
     circleBody->CreateFixture(&fixtureDef);
 
     // Configure step method
-    world->Step(timeStep, velocityIterations, positionIterations);
 
 }
 
@@ -113,19 +113,20 @@ void draw(void)
     frame_count++;
 
     // Clear the buffer
-    glColor3f(0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 0, 0);
+
 
     // Physics stuff
     world->Step(timeStep, velocityIterations, positionIterations);
     b2Vec2 position = circleBody->GetPosition();
     float angle = circleBody->GetAngle();
-    printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
+    // printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
     // circle stuff
     int num_segments = 36;
     float *vertices = new float[(num_segments + 2) * 2];
-    float radius_circle = 0.5f;
+    float radius_circle = 0.2f;
     circle_array(vertices, position.x, position.y, radius_circle, num_segments);
 
     // VBO initializing stuff
@@ -138,13 +139,13 @@ void draw(void)
     // VBO drawing stuff
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, 0);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2) * 2);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2));
     glDisableClientState(GL_VERTEX_ARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDeleteBuffers(1, buffer);
 
     // Show rendered frame
-
+    glutSwapBuffers();
 
 
     // Display fps in window title.
@@ -182,6 +183,7 @@ void key_pressed(unsigned char key, int x, int y)
         case 'q':
             exit(0);
             break;
+        case 'd':
         // Add any keys you want to use, either for debugging or gameplay.
         default:
             break;
