@@ -35,7 +35,6 @@ unsigned int num_levels;
 level_t *levels;
 
 b2World* world;
-b2Body* circleBody;
 
 float timeStep = 1.0/60.0;
 int velocityIterations = 6;
@@ -71,84 +70,88 @@ void circle_array(float* vertices, float start_x, float start_y, float r, int nu
  */
  void load_world(unsigned int level)
  {
-     if (level >= num_levels)
-     {
-         // Note that level is unsigned but we still use %d so -1 is shown as
-         // such.
-         printf("Warning: level %d does not exist.\n", level);
-         return;
-     }
+    if (level >= num_levels)
+    {
+        // Note that level is unsigned but we still use %d so -1 is shown as
+        // such.
+        printf("Warning: level %d does not exist.\n", level);
+        return;
+    }
 
-     // Create a Box2D world and populate it with all bodies for this level
-     // (including the ball).
-     b2Vec2 gravity(0.0f, -9.81f);
-     world = new b2World(gravity);
-     level_t current_level = levels[level];
+    // Create a Box2D world and populate it with all bodies for this level
+    // (including the ball).
+    b2Vec2 gravity(0.0f, -9.81f);
+    world = new b2World(gravity);
+    level_t current_level = levels[level];
 
-     // place ball at starting point
-     point_t starting_point = current_level.start;
+    // place ball at starting point
+    point_t starting_point = current_level.start;
 
-     b2CircleShape circleShape;
-     circleShape.m_p.Set(0, 0);
-     circleShape.m_radius = 0.2f;
+    b2CircleShape circleShape;
+    circleShape.m_p.Set(0, 0);
+    circleShape.m_radius = 0.2f;
 
-     b2BodyDef circleBodyDef;
-     circleBodyDef.type = b2_dynamicBody;
-     circleBodyDef.position.Set(starting_point.x, starting_point.y);
-     circleBody = world->CreateBody(&circleBodyDef);
+    b2BodyDef circleBodyDef;
+    circleBodyDef.type = b2_dynamicBody;
+    circleBodyDef.position.Set(starting_point.x, starting_point.y);
+    b2Body* circleBody = world->CreateBody(&circleBodyDef);
 
-     b2FixtureDef fixtureDef;
-     fixtureDef.shape = &circleShape;
-     circleBody->CreateFixture(&fixtureDef);
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &circleShape;
+    circleBody->CreateFixture(&fixtureDef);
 
-     // place square at goal point
-     point_t goal_point = current_level.end;
+    // place square at goal point
+    point_t goal_point = current_level.end;
 
-     b2PolygonShape boxShape;
-     boxShape.SetAsBox(1,1);
+    b2PolygonShape boxShape;
+    b2Vec2 *box_vertices = new b2Vec2[4];
+    box_vertices[0].Set(goal_point.x, goal_point.y+0.2);
+    box_vertices[1].Set(goal_point.x, goal_point.y);
+    box_vertices[2].Set(goal_point.x+0.2, goal_point.y);
+    box_vertices[3].Set(goal_point.x+0.2, goal_point.y+0.2);
+    boxShape.Set(box_vertices, 4);
 
-     b2BodyDef squareBodyDef;
-     squareBodyDef.type = b2_staticBody;
-     squareBodyDef.position.Set(goal_point.x, goal_point.y);
-     squareBodyDef.angle = 0;
-     b2Body* squareBody = world->CreateBody(&squareBodyDef);
+    b2BodyDef squareBodyDef;
+    squareBodyDef.type = b2_staticBody;
+    squareBodyDef.position.Set(goal_point.x, goal_point.y);
+    squareBodyDef.angle = 0;
+    b2Body* squareBody = world->CreateBody(&squareBodyDef);
 
-     b2FixtureDef boxFixtureDef;
-     boxFixtureDef.shape = &boxShape;
-     boxFixtureDef.density = 1;
-     squareBody->CreateFixture(&boxFixtureDef);
+    b2FixtureDef boxFixtureDef;
+    boxFixtureDef.shape = &boxShape;
+    boxFixtureDef.density = 1;
+    squareBody->CreateFixture(&boxFixtureDef);
 
-     for (int i = 0; i < (int) current_level.num_polygons; i++) {
-       // body stuff
-       poly_t new_polygon = current_level.polygons[i];
-       b2BodyDef polyBodyDef;
+    for (int i = 0; i < (int) current_level.num_polygons; i++) {
+    // body stuff
+    poly_t new_polygon = current_level.polygons[i];
+    b2BodyDef polyBodyDef;
 
-       if (new_polygon.is_dynamic) {
-           polyBodyDef.type = b2_dynamicBody;
-       } else {
-           polyBodyDef.type = b2_staticBody;
-       }
-       polyBodyDef.position.Set(new_polygon.position.x, new_polygon.position.y);
+    if (new_polygon.is_dynamic) {
+        polyBodyDef.type = b2_dynamicBody;
+    } else {
+        polyBodyDef.type = b2_staticBody;
+    }
+    polyBodyDef.position.Set(new_polygon.position.x, new_polygon.position.y);
 
-       // shape stuff
-       b2PolygonShape polygonShape;
-       b2Vec2 *vertices = new b2Vec2[new_polygon.num_verts];
-       for (int j = 0; j < (int) new_polygon.num_verts; j++) {
-           vertices[j].Set(new_polygon.verts[j].x, new_polygon.verts[j].y);
-       }
-       polygonShape.Set(vertices, new_polygon.num_verts);
+    // shape stuff
+    b2PolygonShape polygonShape;
+    b2Vec2 *vertices = new b2Vec2[new_polygon.num_verts];
+    for (int j = 0; j < (int) new_polygon.num_verts; j++) {
+        vertices[j].Set(new_polygon.verts[j].x, new_polygon.verts[j].y);
+    }
+    polygonShape.Set(vertices, new_polygon.num_verts);
 
-       // fixture stuff
-       b2FixtureDef polygonFixtureDef;
-       polygonFixtureDef.shape = &polygonShape;
+    // fixture stuff
+    b2FixtureDef polygonFixtureDef;
+    polygonFixtureDef.shape = &polygonShape;
 
-       // finishing up
-       b2Body* polygonBody = world->CreateBody(&polyBodyDef);
-       polygonBody->CreateFixture(&polygonFixtureDef);
+    // finishing up
+    b2Body* polygonBody = world->CreateBody(&polyBodyDef);
+    polygonBody->CreateFixture(&polygonFixtureDef);
 
-     }
-
- }
+    }
+}
 
 /*
  * Called when we should redraw the scene (i.e. every frame).
@@ -162,7 +165,6 @@ void draw(void)
 
     // Clear the buffer
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(1.0, 0, 0);
 
     // Physics stuff
     world->Step(timeStep, velocityIterations, positionIterations);
@@ -177,6 +179,7 @@ void draw(void)
         b2Fixture* f = b->GetFixtureList();
         while (f != NULL) {
             if (f->GetType() == b2Shape::e_circle) {
+                glColor3f(1.0, 0, 0);
                 int num_segments = 36;
                 b2CircleShape* circle = (b2CircleShape*)f->GetShape();
 
@@ -194,24 +197,25 @@ void draw(void)
                 glVertexPointer(2, GL_FLOAT, 0, 0);
                 glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2));
             } else {
+                glColor3f(0, 1.0, 0);
                 //draw polygon shit
                 b2PolygonShape* poly = (b2PolygonShape*)f->GetShape();
 
                 printf("Vertices: %i\n", poly->GetVertexCount());
 
-                float *vertices = new float[poly->GetVertexCount()];
+                float *vertices = new float[poly->GetVertexCount() * 2];
                 for (int i = 0; i < poly->GetVertexCount(); i++) {
                     b2Vec2 corner = poly->GetVertex(i);
                     vertices[i] = corner.x;
                     vertices[i+1] = corner.y;
-                    printf("corners: %f, %f\n", corner.x, corner.y);
+                    printf("corners: %f, %f\n", vertices[i], vertices[i+1]);
                 }
 
-                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * poly->GetVertexCount(),
-                             vertices, GL_STREAM_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * poly->GetVertexCount() * 2,
+                             vertices, GL_STATIC_DRAW);
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(2, GL_FLOAT, 0, 0);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, poly->GetVertexCount());
             }
 
             f = f->GetNext();
@@ -254,7 +258,7 @@ void resize_window(int width, int height)
 }
 
 /*
- * Called when the user presses a key.
+ * Called when the user presses a key.glEnableClientState
  */
 void key_pressed(unsigned char key, int x, int y)
 {
