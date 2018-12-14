@@ -69,38 +69,86 @@ void circle_array(float* vertices, float start_x, float start_y, float r, int nu
  * Load a given world, i.e. read the world from the `levels' data structure and
  * convert it into a Box2D world.
  */
-void load_world(unsigned int level)
-{
-    if (level >= num_levels)
-    {
-        // Note that level is unsigned but we still use %d so -1 is shown as
-        // such.
-        printf("Warning: level %d does not exist.\n", level);
-        return;
-    }
+ void load_world(unsigned int level)
+ {
+     if (level >= num_levels)
+     {
+         // Note that level is unsigned but we still use %d so -1 is shown as
+         // such.
+         printf("Warning: level %d does not exist.\n", level);
+         return;
+     }
 
+     // Create a Box2D world and populate it with all bodies for this level
+     // (including the ball).
+     b2Vec2 gravity(0.0f, -9.81f);
+     world = new b2World(gravity);
+     level_t current_level = levels[level];
 
-    // Create a Box2D world and populate it with all bodies for this level
-    // (including the ball).
-    b2Vec2 gravity(0.0f, -9.81f);
-    world = new b2World(gravity);
+     // place ball at starting point
+     point_t starting_point = current_level.start;
 
-    b2CircleShape circleShape;
-    circleShape.m_p.Set(0, 0);
-    circleShape.m_radius = 0.2f;
+     b2CircleShape circleShape;
+     circleShape.m_p.Set(0, 0);
+     circleShape.m_radius = 0.2f;
 
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(4.0f, 3.0f);
-    circleBody = world->CreateBody(&bodyDef);
+     b2BodyDef circleBodyDef;
+     circleBodyDef.type = b2_dynamicBody;
+     circleBodyDef.position.Set(starting_point.x, starting_point.y);
+     circleBody = world->CreateBody(&circleBodyDef);
 
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &circleShape;
-    circleBody->CreateFixture(&fixtureDef);
+     b2FixtureDef fixtureDef;
+     fixtureDef.shape = &circleShape;
+     circleBody->CreateFixture(&fixtureDef);
 
-    // Configure step method
+     // place square at goal point
+     point_t goal_point = current_level.end;
 
-}
+     b2PolygonShape boxShape;
+     boxShape.SetAsBox(1,1);
+
+     b2BodyDef squareBodyDef;
+     squareBodyDef.type = b2_staticBody;
+     squareBodyDef.position.Set(goal_point.x, goal_point.y);
+     squareBodyDef.angle = 0;
+     b2Body* squareBody = world->CreateBody(&squareBodyDef);
+
+     b2FixtureDef boxFixtureDef;
+     boxFixtureDef.shape = &boxShape;
+     boxFixtureDef.density = 1;
+     squareBody->CreateFixture(&boxFixtureDef);
+
+     for (int i = 0; i < (int) current_level.num_polygons; i++) {
+       // body stuff
+       poly_t new_polygon = current_level.polygons[i];
+       b2BodyDef polyBodyDef;
+
+       if (new_polygon.is_dynamic) {
+           polyBodyDef.type = b2_dynamicBody;
+       } else {
+           polyBodyDef.type = b2_staticBody;
+       }
+       polyBodyDef.position.Set(new_polygon.position.x, new_polygon.position.y);
+
+       // shape stuff
+       b2PolygonShape polygonShape;
+       b2Vec2 *vertices = new b2Vec2[new_polygon.num_verts];
+       for (int j = 0; j < (int) new_polygon.num_verts; j++) {
+           vertices[j].Set(new_polygon.verts[j].x, new_polygon.verts[j].y);
+       }
+       polygonShape.Set(vertices, new_polygon.num_verts);
+
+       // fixture stuff
+       b2FixtureDef polygonFixtureDef;
+       polygonFixtureDef.shape = &polygonShape;
+
+       // finishing up
+       b2Body* polygonBody = world->CreateBody(&polyBodyDef);
+       polygonBody->CreateFixture(&polygonFixtureDef);
+
+     }
+
+ }
 
 /*
  * Called when we should redraw the scene (i.e. every frame).
@@ -116,33 +164,66 @@ void draw(void)
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 0, 0);
 
-
     // Physics stuff
     world->Step(timeStep, velocityIterations, positionIterations);
-    b2Vec2 position = circleBody->GetPosition();
-    float angle = circleBody->GetAngle();
-    // printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
-    // circle stuff
-    int num_segments = 36;
-    float *vertices = new float[(num_segments + 2) * 2];
-    float radius_circle = 0.2f;
-    circle_array(vertices, position.x, position.y, radius_circle, num_segments);
+    b2Body *b = world->GetBodyList();
+    while (b != NULL) {
 
-    // VBO initializing stuff
-    GLuint buffer[1];
-    glGenBuffers(1, buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, *buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (num_segments + 2) * 2,
-                 vertices, GL_STREAM_DRAW);
+        GLuint buffer[1];
+        glGenBuffers(1, buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, *buffer);
 
-    // VBO drawing stuff
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, 0);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2));
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDeleteBuffers(1, buffer);
+        b2Fixture* f = b->GetFixtureList();
+        while (f != NULL) {
+            if (f->GetType() == b2Shape::e_circle) {
+                int num_segments = 36;
+                b2CircleShape* circle = (b2CircleShape*)f->GetShape();
+
+                // circle stuff
+                b2Vec2 position = b->GetPosition();
+                printf("%f, %f\n", position.x, position.y);
+                float *vertices = new float[(num_segments + 2) * 2];
+                float radius_circle = circle->m_radius;
+                circle_array(vertices, position.x, position.y, radius_circle, num_segments);
+
+                // GL Load circle stuff
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (num_segments + 2) * 2,
+                             vertices, GL_STREAM_DRAW);
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(2, GL_FLOAT, 0, 0);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2));
+            } else {
+                //draw polygon shit
+                b2PolygonShape* poly = (b2PolygonShape*)f->GetShape();
+
+                printf("Vertices: %i\n", poly->GetVertexCount());
+
+                float *vertices = new float[poly->GetVertexCount()];
+                for (int i = 0; i < poly->GetVertexCount(); i++) {
+                    b2Vec2 corner = poly->GetVertex(i);
+                    vertices[i] = corner.x;
+                    vertices[i+1] = corner.y;
+                    printf("corners: %f, %f\n", corner.x, corner.y);
+                }
+
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * poly->GetVertexCount(),
+                             vertices, GL_STREAM_DRAW);
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(2, GL_FLOAT, 0, 0);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+            }
+
+            f = f->GetNext();
+        }
+
+        // VBO drawing stuff
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDeleteBuffers(1, buffer);
+
+        b = b->GetNext();
+    }
 
     // Show rendered frame
     glutSwapBuffers();
@@ -183,7 +264,8 @@ void key_pressed(unsigned char key, int x, int y)
         case 'q':
             exit(0);
             break;
-        case 'd':
+        case 'r':
+            load_world(0);
         // Add any keys you want to use, either for debugging or gameplay.
         default:
             break;
