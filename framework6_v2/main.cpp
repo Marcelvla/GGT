@@ -34,6 +34,35 @@ int frame_count;
 unsigned int num_levels;
 level_t *levels;
 
+b2World* world;
+b2Body* circleBody;
+
+float timeStep = 1.0/60.0;
+int velocityIterations = 6;
+int positionIterations = 2;
+
+/*
+int circleEdgePts = 36;
+float twoPi = 2.0f * 3.14159f;
+glBegin(GL_TRIANGLE_FAN);
+glVertex2f(position.x, position.y);
+*/
+
+void circle_array(float* vertices, float start_x, float start_y, float r, int num_segments)
+{
+    vertices[0] = start_x;
+    vertices[1] = start_y; // middle point
+    for(int i = 0; i < num_segments; i++)
+    {
+        // Calculate angle, x and y component, then add to array
+        float theta = 2.0f * 3.1415926f * float(i) / float(num_segments);
+        float x = r * cosf(theta);
+        float y = r * sinf(theta);
+        vertices[(i+1) * 2] = x;
+        vertices[(i+1) * 2 + 1] = y;
+    }
+    glEnd();
+}
 
 /*
  * Load a given world, i.e. read the world from the `levels' data structure and
@@ -53,7 +82,7 @@ void load_world(unsigned int level)
     // Create a Box2D world and populate it with all bodies for this level
     // (including the ball).
     b2Vec2 gravity(0.0f, -9.81f);
-    b2World* world = new b2World(gravity);
+    world = new b2World(gravity);
 
     b2CircleShape circleShape;
     circleShape.m_p.Set(0, 0);
@@ -62,16 +91,13 @@ void load_world(unsigned int level)
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
     bodyDef.position.Set(4.0f, 3.0f);
-    b2Body* circleBody = world->CreateBody(&bodyDef);
+    circleBody = world->CreateBody(&bodyDef);
 
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &circleShape;
     circleBody->CreateFixture(&fixtureDef);
 
     // Configure step method
-    float timeStep = 1.0/60.0;
-    int velocityIterations = 6;
-    int positionIterations = 2;
     world->Step(timeStep, velocityIterations, positionIterations);
 
 }
@@ -90,15 +116,36 @@ void draw(void)
     glColor3f(0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Draw stuff
-    world.Step();
+    // Physics stuff
+    world->Step(timeStep, velocityIterations, positionIterations);
     b2Vec2 position = circleBody->GetPosition();
     float angle = circleBody->GetAngle();
     printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
+    // circle stuff
+    int num_segments = 36;
+    float *vertices = new float[(num_segments + 2) * 2];
+    float radius_circle = 0.5f;
+    circle_array(vertices, position.x, position.y, radius_circle, num_segments);
+
+    // VBO initializing stuff
+    GLuint buffer[1];
+    glGenBuffers(1, buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, *buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (num_segments + 2) * 2,
+                 vertices, GL_STREAM_DRAW);
+
+    // VBO drawing stuff
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, 0);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, (num_segments + 2) * 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDeleteBuffers(1, buffer);
 
     // Show rendered frame
-    glutSwapBuffers();
+
+
 
     // Display fps in window title.
     if (frametime >= 1000)
